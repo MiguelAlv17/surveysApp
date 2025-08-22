@@ -1,0 +1,302 @@
+/* Contenedor principal del expand */
+.expand-container {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 8px 16px 8px 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    animation: expandIn 0.3s ease-out;
+}
+
+@keyframes expandIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header del expand */
+.expand-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.kiosco-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(271deg, #004ccf 0%, #01144c 100%);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.kiosco-icon .material-icons {
+    font-size: 28px;
+    color: white;
+}
+
+.kiosco-details {
+    flex: 1;
+}
+
+.kiosco-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
+}
+
+.kiosco-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 0;
+    color: #4a5568;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.meta-item .material-icons {
+    font-size: 16px;
+    color: #667eea;
+}
+
+/* Información adicional */
+.expand-info {
+    margin-bottom: 20px;
+}
+
+.info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.info-card .material-icons {
+    font-size: 20px;
+    color: #667eea;
+    margin-top: 2px;
+}
+
+.info-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-title {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.info-description {
+    color: #4a5568;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Acciones del expand */
+.expand-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.action-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4a5568;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.action-info .material-icons {
+    font-size: 18px;
+    color: #667eea;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .expand-container {
+        padding: 20px 16px;
+        margin: 8px 12px;
+        border-radius: 12px;
+    }
+
+    .expand-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        text-align: left;
+    }
+
+    .kiosco-icon {
+        width: 48px;
+        height: 48px;
+        align-self: center;
+    }
+
+    .kiosco-icon .material-icons {
+        font-size: 24px;
+    }
+
+    .kiosco-name {
+        font-size: 18px;
+        text-align: center;
+    }
+
+    .kiosco-meta {
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .expand-actions {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .action-info {
+        justify-content: center;
+    }
+
+    .action-buttons {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .action-buttons :deep(.modern-btn) {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .expand-container {
+        padding: 16px 12px;
+    }
+
+    .kiosco-meta {
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .info-card {
+        padding: 12px;
+    }
+}
+
+/* Estados especiales */
+.expand-container.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Hover effects */
+.expand-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: light) {
+    .expand-container {
+        /* background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); */
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-color: #4a5568;
+        color: #f7fafc;
+    }
+
+    .kiosco-name {
+        color: #f7fafc;
+    }
+
+    .info-card {
+        background: rgba(45, 55, 72, 0.7);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .info-title {
+        color: #e2e8f0;
+    }
+}
+@media (prefers-color-scheme: dark) {
+    .expand-container {
+        /* background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); */
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-color: #e2e8f0;
+        color: #2d3748;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .kiosco-name {
+        color: #1a202c;
+    }
+
+    .kiosco-meta {
+        color: #4a5568;
+    }
+
+    .info-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(102, 126, 234, 0.15);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .info-title {
+        color: #2d3748;
+    }
+
+    .info-description {
+        color: #4a5568;
+    }
+
+    .action-info {
+        color: #4a5568;
+    }
+
+    .meta-item {
+        color: #4a5568;
+    }
+
+    .expand-container:hover {
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+}

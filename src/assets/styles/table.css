@@ -1,0 +1,93 @@
+.search-input-wrapper {
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-label {
+    display: block;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    z-index: 2;
+    color: #a0aec0;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px 12px 48px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    background: white;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-input:focus+.input-icon {
+    color: #667eea;
+}
+
+.clear-search {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #a0aec0;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-search:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.clear-search .material-icons {
+    font-size: 18px;
+}
+
+.search-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Table Section */
+.table-section {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+@media (prefers-color-scheme: dark) {
+    .search-label {
+        color: #d1d4db;
+    }
+    .table-section {
+        background: rgb(44, 49, 83);
+    }
+}
+/* Custom Data Table Styles */

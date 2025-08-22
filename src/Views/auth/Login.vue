@@ -17,9 +17,9 @@
       <div class="login-header">
         <div class="logo-container">
           <div class="logo-icon">
-            <span class="material-icons">account_balance</span>
+            <span class="material-icons">assignment</span>
           </div>
-          <h1 class="app-title">DVR-RECAUDACION APP</h1>
+          <h1 class="app-title">Encuestas App</h1>
         </div>
         <p class="login-subtitle">Inicio de sesion</p>
       </div>
@@ -34,20 +34,15 @@
               <span class="material-icons">person</span>
             </div>
             <input
-              v-model.trim="userData.username"
+              v-model.trim="email"
               type="email"
               id="email"
               class="form-input"
               placeholder="tu@email.com"
               required
               autocomplete="email"
-               @blur="validateField('username', userData.username)"
-                  @input="handleInput('username', $event.target.value)"
             />
           </div>
-            <span v-if="errors.username" class="error-message">
-                {{ errors.username }}
-              </span>
         </div>
 
         <!-- Password Field -->
@@ -58,15 +53,13 @@
               <span class="material-icons">lock</span>
             </div>
             <input
-              v-model.trim="userData.password"
+              v-model.trim="password"
               :type="showPassword ? 'text' : 'password'"
               id="password"
               class="form-input"
               placeholder="Tu contraseña"
               required
               autocomplete="current-password"
-                @blur="validateField('password', userData.password)"
-                @input="handleInput('password', $event.target.value)"
             />
             <button
               type="button"
@@ -79,9 +72,6 @@
               </span>
             </button>
           </div>
-           <span v-if="errors.password" class="error-message">
-                {{ errors.password }}
-              </span>
         </div>
 
         <!-- Remember Me -->
@@ -95,23 +85,23 @@
         </div> -->
 
         <!-- Submit Button -->
-        <ButtonCustom 
+        <ModernButton 
           type="submit" 
-          color="green" 
+          color="primary" 
           :disabled="loading"
           class="login-button"
         >
           <span v-if="loading" class="loading-spinner"></span>
           <span class="material-icons" v-if="!loading">login</span>
           {{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
-        </ButtonCustom>
+        </ModernButton>
 
         <!-- Error Message -->
-        <div v-if="errorAuth!=''" class="error-message">
-            <span class="material-icons">error</span>
-            <span>Las credenciales son incorrectas. Inténtalo de nuevo.</span>
+        <div v-if="userStore.errorAuth" class="error-message">
+          <span class="material-icons">error</span>
+          <span>Las credenciales son incorrectas. Inténtalo de nuevo.</span>
         </div>
-    </form>
+      </form>
 
       <!-- Footer -->
       <div class="login-footer">
@@ -123,88 +113,40 @@
 
 <script setup>
 import { useUserStore } from '../../stores/user';
-import { reactive, ref } from 'vue';
-import '../../assets/styles/Login.css'
-import ButtonCustom from '../Components/ButtonCustom.vue';
-import { alert_error } from '../../constants/alerts';
-import { useRouter } from 'vue-router'
-    const router = useRouter();
+import { ref } from 'vue';
+import '../../assets/styles/auth.css'
+import ModernButton from '../../components/ModernButtons/ModernButton.vue';
 
-const loading = ref(false);
+const userStore = useUserStore();
+const email = ref('');
+const password = ref('');
 const showPassword = ref(false);
-const errorAuth = ref("");
-const userData = reactive({
-    username:"developerzz@zz.com",
-    password:"123456"
-});
-const {loginUser} =useUserStore()
-const errors = reactive({
-    username:"",
-    password:""
-});
-// Validación del formulario
-const validateField = (field, value) => {
-  switch (field) {
-    case 'username':
-      if (!value.trim()) {
-        errors.username = 'El usuario es requerido';
-        return false;
-      } else if (value.length < 3) {
-        errors.username = 'El usuario debe tener al menos 3 caracteres';
-        return false;
-      } else {
-        errors.username = '';
-        return true;
-      }
-    
-    case 'password':
-      if (!value.trim()) {
-        errors.password = 'La contraseña es requerida';
-        return false;
-      } else if (value.length < 6) {
-        errors.password = 'La contraseña debe tener al menos 6 caracteres';
-        return false;
-      } else {
-        errors.password = '';
-        return true;
-      }
-    
-    default:
-      return true;
-  }
-};
-const handleInput = (field, value) => {
-  userData[field] = value;
-  if (errors[field]) {
-    validateField(field, value);
-  }
-};
+const rememberMe = ref(false);
+const loading = ref(false);
 
-const validateForm = () => {
-  const validations = [
-    validateField('username', userData.username),
-    validateField('password', userData.password)
-  ];
-  
-  return validations.every(Boolean);
-};
 const handleSubmit = async () => {
-  if (!validateForm()) {
-    alert_error('Por favor, corrige los errores en el formulario');
-    return;
-  }
   loading.value = true;
-   const response = await loginUser(userData.username, userData.password)
-   const {status,message} =response
-   if (status==400) {
-    errorAuth.value = message;
-    return
-   }    
-    router.push('/')
-
+  userStore.errorAuth = false;
   
+  try {
+    await userStore.loginUser(email.value, password.value);
+    clearForm();
+  } catch (error) {
+    console.error('Login error:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
+const clearForm = () => {
+  email.value = '';
+  password.value = '';
+  showPassword.value = false;
+};
+
+const togglePassword = () => {
+  showPassword.value = !showPassword.value;
+};
 </script>
 
 <style scoped>
