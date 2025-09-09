@@ -306,11 +306,15 @@ const handleBlur = (event) => {
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .modern-select {
-    background: #ffffff;
-    color: #474747;
-    border-color: #e2e8f0;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+    color: #757677 !important;
   }
-  
+  .select-label {
+
+  color: #9f9fa1;
+
+}
   .modern-select:focus {
     border-color: #667eea;
   }
@@ -325,4 +329,5 @@ const handleBlur = (event) => {
     color: #f7fafc;
   }
 }
+    
 </style>

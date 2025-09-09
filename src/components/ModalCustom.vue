@@ -357,8 +357,8 @@ const handleBackdropClick = (event) => {
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     .modal-container {
-        background: rgba(229, 229, 230, 0.98);
-        color: #444444;
+        background: #2d3748;
+        /* color: #9e9b9b; */
     }
     
     .modal-footer {
