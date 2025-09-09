@@ -43,7 +43,7 @@ export const useGetDataSurveys = () => {
             return { data: error, status: 400 }
         }
     }
-    const saveSurvey = async (id,answers) => {
+    const saveSurvey = async (id,answers,sucursal) => {
         try {
             const config = {
                 method: 'post',
@@ -51,10 +51,10 @@ export const useGetDataSurveys = () => {
                 headers: { Authorization: `Bearer ${TOKEN}` },
                 data:
                 {
+                    sucursalId:sucursal,
                     respuestas:answers
                 }
             }
-            console.log(config);
             const response = await axios(config);
             const { data, status } = response;
             return { data, status }
@@ -84,12 +84,31 @@ export const useGetDataSurveys = () => {
             return { data: error, status: 400 }
         }
     }
-
+    const addNewSurvey = async(formdata) => {
+        try {
+            const config = {
+                method: 'post',
+                url: `${API}encuestas`,
+                headers: { Authorization: `Bearer ${TOKEN}` },
+                data:formdata
+            }
+            const response = await axios(config);
+            const { data, status } = response;
+            return { data, status }
+        } catch (error) {
+            console.log(error)
+            if (error.response.status == 401) {
+                router.push('/login')
+            }
+            return { data: error, status: 400 }
+        }
+    }
     return {
         getSurveysList,
         saveSurvey,
         getSurveyByid,
-        getSucursales
+        getSucursales,
+        addNewSurvey
     }
 
 }

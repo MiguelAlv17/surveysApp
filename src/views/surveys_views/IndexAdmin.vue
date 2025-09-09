@@ -1,65 +1,104 @@
 <script setup>
-import { onMounted, reactive, ref, version } from 'vue';
-import { useRouter,useRoute } from 'vue-router'
-const route = useRoute();
-import ContainerCustom from '../../components/ContainerCustom.vue';
-import BtnTable from '../../components/TableButtons/BtnTable.vue';
-import ModernButton from '../../components/ModernButtons/ModernButton.vue';
-import CardInfo from '../../components/CardInfo.vue';
-import { utils, writeFileXLSX } from 'xlsx';
-import { alertError, alertSuccess, alertWarning } from '../../constantes/alerts';
+import { ref, onMounted, computed } from 'vue';
+import EasyDataTable from 'vue3-easy-data-table';
 import moment from 'moment';
+import { useRouter } from 'vue-router'
+import { alertError, alertSuccess } from '../../constantes/alerts';
+import ContainerCustom from '../../components/ContainerCustom.vue';
+import ModernButton from '../../components/ModernButtons/ModernButton.vue';
+import ModalCustom from '../../components/ModalCustom.vue';
+import BtnTable from '../../components/TableButtons/BtnTable.vue';
+import LoaderBtn from '../../components/LoaderBtn.vue';
+import '../../assets/styles/table.css';
+import '../../assets/styles/home.css'
+import {tableHeigh} from '../../constantes/api_constants'
+import { utils, writeFileXLSX } from 'xlsx';
 import {useGetDataSurveys} from '../../composables/getDataSurveys'
-const {getSurveyByid}=useGetDataSurveys()
-const isExporting = ref(false);
-const isloading =ref(false);
+// compsoables
+const {getSurveysList} =useGetDataSurveys()
+const router = useRouter();
+
+// tablas
 const headers = ref([
-    { text: "ID", value: "id", sortable: true },
-    { text: "Campo", value: "textoPregunta", sortable: true },
-    { text: "Tipo", value: "tipoPregunta", sortable: true },
-    { text: "Obligatoria", value: "obligatory", sortable: true },
+    { text: "Clave", value: "id", sortable: true },
+    { text: "Nombre", value: "titulo", sortable: true },
+    { text: "Descripcion", value: "descripcion", sortable: true },
+    { text: "Elaborada por", value: "nombreCreador", sortable: true },
+    { text: "Elaborada el dia", value: "fechaFormated", sortable: true },
     { text: "Acciones", value: "actions", sortable: true },
 ]);
-const items = ref([ ]);
-const searchField = ["dvr_id_kiosco", "name_device", "alias", "tipoKiosco"]; //campos por los que buscara el filtro
+const items = ref([
+]);
+const searchField = ["id", "titulo", "descripcion", "nombreCreador"]; //campos por los que buscara el filtro
 const searchInput = ref(""); // variable para el filtro
 const filterSearch = ref('');
-
-const surveyData = reactive({
-    id:0,
-    titulo:"",
-    descripcion:"",
-    fechaCreacion:"",
-    nombreCreador:""
-});
+// loaders
+const isloading = ref(false);
+const isOpenning = ref(false);
+const isExporting = ref(false); // Nuevo loader para exportación
+// extras
+const updated_at = ref(null);
+const dateFormat='DD/MM/YYYY hh:mm:ss'
+const modalShow = ref(false);
+const deviceSelected = ref(0);
+const roleId = ref(0);
+// functions
 onMounted( () => {
-    const idK = route.params.idSurvey
-    getSurveyInfo(idK)
+    roleId.value = localStorage.getItem('userRole');
+    getList()
 });
-
-const getSurveyInfo = async(id_survey) => {
-    isloading.value=true;
-    const response = await getSurveyByid(id_survey)
-    const {data,status}=response
-    if (status!=200) {
-        alertError("Error","Ocurrio un error al cargar la informacion de la encuesta", 3)
-    }
+const getList = async() => {
+    isloading.value = true;
+    const response = await getSurveysList()
     console.log(response);
-    isloading.value=false
-    const {id, titulo, descripcion, fechaCreacion, nombreCreador,preguntas} =data.data
-    surveyData.id=id;
-    surveyData.titulo=titulo,
-    surveyData.descripcion=descripcion
-    surveyData.fechaCreacion=moment(fechaCreacion).format('DD/MM/YYYY H:mm a')
-    surveyData.nombreCreador=nombreCreador
-    items.value=preguntas
+    
+    isloading.value = false;
+    updated_at.value = moment().format(dateFormat)
+    const {status,data} = response
+    if (status!=200) {
+        alertError("Ocurrio un error al cargar los datos")
+        return
+    }
+
+    items.value = data.data.map(i=>{
+        i.fechaFormated= moment(i.fechaCreacion).format('DD/MM/YYYY hh:mm a')
+        return i
+    });
 }
+const addnewDvr = () => {
+    router.push("/dvr/add")
+}
+const redirectToEdit = (item) => {
+    const route_to = `/surveys/edit/${item.id}`;
+     router.push(route_to)
+}
+const openingDvr = async() => {
+    isOpenning.value=true;
+    // deviceSelected.value
+    // const response = await 
+    const request = {
+        id_kiosco:deviceSelected.value.dvr_id_kiosco,
+        id_dvr:deviceSelected.value.dvr_id,
+        solicito:1
+    }
+    const response = await openDvr(request);
+    const{status}=response
+    modalShow.value=false;
+    isOpenning.value=false;
+    if (status!=200) {
+        alertError("Oops!", "Ocurrio un abrir al enviar la solicitud de apertura")
+        return
+    }
+    alertSuccess("Apertura realizada")
+}
+
 const exportToExcel = () => {
     try {
         isExporting.value = true;
         
-        let dataToExport = items.value;
         // Filtrar los datos según el filtro actual (si existe)
+        let dataToExport = items.value;
+        
         if (searchInput.value && searchInput.value.trim() !== '') {
             const searchTerm = searchInput.value.toLowerCase();
             dataToExport = items.value.filter(item => {
@@ -72,12 +111,13 @@ const exportToExcel = () => {
         
         // Preparar los datos para Excel (excluir columna de acciones)
         const excelData = dataToExport.map(item => ({
-            'ID':item.id,
-            'Pregunta':item.textoPregunta,
-            'Tipo pregunta': item.tipoPregunta,
-            'Obligatoria':item.obligatoria ?'Si':'No'
+            'ID': item.id,
+            'Titulo': item.titulo,
+            'Descripccion': item.descripcion,
+            'Elaborada por': item.nombreCreador,
+            'Elaborada el dia': item.fechaFormated
         }));
-         
+        
         // Crear workbook y worksheet
         const wb = utils.book_new();
         const ws = utils.json_to_sheet(excelData);
@@ -86,21 +126,21 @@ const exportToExcel = () => {
         const colWidths = [
             { wch: 15 }, // id
             { wch: 25 }, // nombre
-            { wch: 30 }, // total respuestas
+            { wch: 45 }, // total respuestas
             { wch: 25 }  // elaborada
         ];
         ws['!cols'] = colWidths;
         
         // Agregar hoja al workbook
-        utils.book_append_sheet(wb, ws, "Questions List");
+        utils.book_append_sheet(wb, ws, "Surveys List");
         
         // Generar nombre del archivo con fecha actual
-        const fileName = `QuestionsList_${moment().format('YYYY-MM-DD_HH-mm')}.xlsx`;
+        const fileName = `SurveysList_${moment().format('YYYY-MM-DD_HH-mm')}.xlsx`;
         
         // Descargar el archivo
         writeFileXLSX(wb, fileName);
         
-        alertWarning("Generando archivo excel","generando",4);
+        alertSuccess("Archivo Excel Generado exitosamente");
         
     } catch (error) {
         console.error('Error al exportar:', error);
@@ -109,48 +149,20 @@ const exportToExcel = () => {
         isExporting.value = false;
     }
 }
+const addnewSurvey = () => {
+    router.push("/surveys/add")
+}
 </script>
-
 <template>
+    <!-- <Loading v-if="isloading"></Loading> -->
     <div >
         <ContainerCustom 
-        title="Preguntas" 
-        subtitle="Listado de Preguntas de la encuesta" 
-        :loading="isloading||isExporting"
+        title="Encuestas" 
+        subtitle="Listado de usuarios con sus encuestas" 
+        :loading="isloading"
         icon="file_present">
             <template v-slot:body>
-                <div class="form-info-section">
-                <div class="info-card">
-                    <div class="info-header">
-                        <span class="material-icons info-icon">info</span>
-                        <h3 class="info-title">Información de la encuesta</h3>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="material-icons">numbers</span>
-                                <span>{{ surveyData.id }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="material-icons">title</span>
-                                <span>{{ surveyData.titulo }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="material-icons">description</span>
-                                <span>{{ surveyData.descripcion }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="material-icons">assignment_ind</span>
-                                <span>{{ surveyData.nombreCreador }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="material-icons">calendar_month</span>
-                                <span>{{ surveyData.fechaCreacion }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                
                 <!-- Search and Actions Section -->
                 <div class="search-and-actions">
                     <div class="search-section">
@@ -188,14 +200,14 @@ const exportToExcel = () => {
                                     <span v-else class="material-icons">file_download</span>
                                     {{ isExporting ? 'Exportando...' : 'Exportar Excel' }}
                                 </ModernButton>
-                                <!-- <ModernButton  v-if="roleId==1"
+                                <ModernButton  
                                     color="blue" 
-                                    :function="addnewDvr"
+                                    :function="addnewSurvey"
                                     tooltip="Agregar nuevo registro"
                                 >
                                     <span class="material-icons">add</span>
                                     Agregar
-                                </ModernButton> -->
+                                </ModernButton>
                             </div>
                         </div>
                     </div>
@@ -214,19 +226,14 @@ const exportToExcel = () => {
                         empty-message="Sin registros disponibles"
                         rows-of-page-separator-message="de"
                         alternating
-                        :table-height="450"
+                        :table-height="tableHeigh"
                         buttons-pagination
                         table-class-name="modern-table"
                         theme-color="#667eea"
                         class="custom-data-table"
                     >
-                    <template #item-obligatory="item">
-                        <span v-if="item.obligatoria==true" class="material-icons text-danger-custom">
-                        check_circle
-                        </span>
-                        <span v-else  class="material-icons text-success-custom">
-                        cancel
-                        </span>
+                    <template #item-lastupdated="item">
+                        {{ moment(item.last_updated).format('DD/MM/YYYY hh:mm a') }}
 
                     </template>
                     <template #item-actions="item" >
@@ -255,10 +262,10 @@ const exportToExcel = () => {
                 <div class="footer-content">
                     <div class="footer-info">
                         <span class="material-icons">info</span>
-                        <span>registros en total</span>
+                        <span>{{ items.length }} registros en total</span>
                     </div>
                     <div class="footer-actions">
-                        <span class="last-update">Última actualización: </span>
+                        <span class="last-update">Última actualización: {{ updated_at }}</span>
                          <ModernButton 
                             color="lile" 
                             :function="getList"
@@ -273,106 +280,67 @@ const exportToExcel = () => {
     </div>
 
 
-   
+    <!--MODAL DE APERTURA DE PUERTA  -->
+    <ModalCustom 
+         v-model:show="modalShow"
+        title="Confirmacion de apertura DVR"
+        icon="meeting_room"
+        :width="40"
+        maxWidth="800px"
+        :closable="false"
+        >
+        <template #body>
+            <h6>Esta seguro de <strong>abrir</strong> la puerta del DVR?</h6>
+            <small class="text-secondary">La accion no podra deshacerse</small>
+        </template>
+        
+        <template #footer>
+            <ModernButton color="lile" @click="modalShow = false">
+            Cancelar
+            </ModernButton>
+            <ModernButton color="green" @click="openingDvr" :disabled="isOpenning">
+            <LoaderBtn v-if="isOpenning"/>
+            <span v-else class="material-icons">login</span>
+                Apertura
+            </ModernButton>
+        </template>
+    </ModalCustom>
+
 
 </template>
 <style scoped>
-.text-danger-custom{
- color: var(--danger-dark);
-}
-.text-success-custom{
-    color: var(--success-dark);
-}
-/* ===================================
-   SECCIÓN DE INFORMACIÓN
-   =================================== */
-
-.form-info-section {
-    margin-bottom: var(--spacing-2xl);
-}
-
-.info-card {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    transition: all var(--transition-normal);
-}
-
-.info-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-}
-
-.info-header {
-    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-    color: var(--text-white);
-    padding: var(--spacing-lg) var(--spacing-xl);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.info-icon {
-    font-size: 20px;
-}
-
-.info-title {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-}
-
-.info-content {
-    padding: var(--spacing-xl);
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-lg);
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
-.info-item .material-icons {
-    font-size: 18px;
-    color: var(--primary-color);
-}
 
 :deep(.modern-table) {
-    --easy-table-border: 1px solid #e2e8f0;
-    --easy-table-row-border: 1px solid #f7fafc;
+
     --easy-table-header-font-size: 14px;
     --easy-table-header-height: 50px;
     --easy-table-header-font-color: #4a5568;
     --easy-table-header-background-color: #f8fafc;
+    
     --easy-table-body-even-row-font-color: #4a5568;
     --easy-table-body-even-row-background-color: #ffffff;
-    --easy-table-body-odd-row-font-color: #4a5568;
-    --easy-table-body-odd-row-background-color: #f8fafc;
+    
+    --easy-table-body-row-font-color: #4a5568;
+    --easy-table-body-row-background-color: #f8fafc;
     --easy-table-body-row-height: 46px;
     --easy-table-body-row-font-size: 14px;
     --easy-table-body-row-hover-font-color: #667eea;
     --easy-table-body-row-hover-background-color: rgba(102, 126, 234, 0.05);
+
     --easy-table-footer-background-color: #f8fafc;
     --easy-table-footer-font-color: #4a5568;
     --easy-table-footer-font-size: 12px;
     --easy-table-footer-padding: 0px 16px;
     --easy-table-footer-height: 50px;
+
     --easy-table-scrollbar-track-color: #f1f1f1;
     --easy-table-scrollbar-color: #c1c1c1;
     --easy-table-scrollbar-thumb-color: #667eea;
     --easy-table-scrollbar-corner-color: #f1f1f1;
+
     --easy-table-loading-mask-background-color: rgba(255, 255, 255, 0.9);
 }
+
 @media (prefers-color-scheme: dark) {
     .custom-data-table :deep(.vue3-easy-data-table__header th) {
         border-bottom: 2px solid #43aaff;
@@ -398,39 +366,10 @@ const exportToExcel = () => {
     
     --easy-table-scrollbar-track-color: #f1f1f1;
     --easy-table-scrollbar-color: #c1c1c1;
-    --easy-table-scrollbar-thumb-color: #43aaff;
+    --easy-table-scrollbar-thumb-color: #667eea;
     --easy-table-scrollbar-corner-color: #f1f1f1;
     
     --easy-table-loading-mask-background-color: rgba(37, 43, 65, 0.9);
-    }
-    .text-danger-custom{
-        color: var(--danger-light);
-    }
-    .text-success-custom{
-        color: var(--success-light);
-    }
-    /* card */
-    .info-card {
-        background: var(--bg-dark);
-        border: 1px solid var(--border-color-medium);
-        border-radius: var(--border-radius-lg);
-    }
-    .info-header {
-        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-        color: var(--text-white);
-    }
-
-    .info-item {
-        color: var(--text-light);
-    }
-
-    .info-item .material-icons {
-        color: var(--primary-color);
-    }
-    .search-section{
-        background: var(--bg-dark)!important;
-        border: 1px solid var(--border-color-medium)!important;
-
     }
 }
 </style>

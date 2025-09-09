@@ -29,25 +29,26 @@ const routes = [
         children: [
 
             // {path: '', component: () => import('./views/bitacora_views/bitacora.vue'),meta:{auth:true}},
-            { path: '', component: () => import('./views/surveys_views/index.vue'), meta: { auth: true } },
+            { path: '', component: () => import('./views/surveys_views/IndexAdmin.vue'), meta: { auth: true } },
         ]
     },
     {
-        path: "/surveys/edit/:idSurvey",
+        path: "/surveys/add",
         component: () => import('./views/layout/Navbar.vue'),
         children: [
 
             // {path: '', component: () => import('./views/bitacora_views/bitacora.vue'),meta:{auth:true}},
-            { path: '', component: () => import('./views/questions_views/index.vue'), meta: { auth: true } },
+            { path: '', component: () => import('./views/surveys_views/Add.vue'), meta: { auth: true } },
         ]
     },
+    
     {
         path: "/responding",
         component: () => import('./views/layout/Navbar.vue'),
         children: [
 
             // {path: '', component: () => import('./views/bitacora_views/bitacora.vue'),meta:{auth:true}},
-            { path: '', component: () => import('./views/surveys_views/survey_user.vue'), meta: { auth: true } },
+            { path: '', component: () => import('./views/surveys_views/IndexUser.vue'), meta: { auth: true } },
         ]
     },
     {

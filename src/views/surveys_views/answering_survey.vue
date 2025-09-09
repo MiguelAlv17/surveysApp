@@ -10,12 +10,28 @@ import SurveyForm from '../../components/SurveyForm.vue'; // Tu nuevo componente
 import { alertError, alertSuccess, alertWarning } from '../../constantes/alerts';
 import moment from 'moment';
 import { useGetDataSurveys } from '../../composables/getDataSurveys'
-
+import SearchableSelect from '../../components/ModernInputs/SearchableSelect.vue';
+import VueMultiselect from 'vue-multiselect'
+import 'vue-multiselect/dist/vue-multiselect.css'
 const { getSurveyByid, saveSurvey,getSucursales } = useGetDataSurveys()
 const isloading = ref(false);
 const  isSending = ref(false);
 const sucursalesList = ref([]);
-
+// table
+const headers = ref([
+    { text: "Codigo sucursal", value: "codigoSucursal", sortable: true },
+    { text: "Sucursal", value: "nombre", sortable: true },
+    { text: "Ciudad", value: "ciudad", sortable: true },
+    { text: "Estado", value: "tipoUsuario", },
+    { text: "Estatus", value: "status", },
+    { text: "Acciones", value: "actions", width:150},
+]);
+const items = ref([
+    // {userid:1,nombre:"miguel",correo:"mi@gmail.com",level:"admin"}
+]);
+const searchField = ["userid", "username", "correo", "level"]; //campos por los que buscara el filtro
+const searchInput = ref(""); // va
+// 
 const surveyData = reactive({
     id: 0,
     titulo: "",
@@ -38,15 +54,11 @@ const getSurveyInfo = async (id_survey) => {
     try {
         const response = await getSurveyByid(id_survey)
         const { data, status } = response
-          
         if (status != 200) {
             alertError("Error", "Ocurrió un error al cargar la información de la encuesta", 3)
             return;
         }
-        
-        console.log(response);
         const { id, titulo, descripcion, fechaCreacion, nombreCreador, preguntas } = data.data
-        
         surveyData.id = id;
         surveyData.titulo = titulo,
         surveyData.descripcion = descripcion
@@ -64,12 +76,13 @@ const getSurveyInfo = async (id_survey) => {
 
 const getsucursalesList = async() => {
     const response = await getSucursales()
+    console.log(response);
     const {status,data} =response
     if (status!=200) {
         alertError("Oops", "Ocurrio un error al cargar las sucursales")
         return
     }
-    sucursalesList.value = data
+    sucursalesList.value = data.data
 }
 
 // Manejar envío de encuesta
@@ -95,16 +108,22 @@ const handleSurveySubmit = async (surveyResponse) => {
             }
         }
      })
-    console.log(result);
-   
-    const response = await saveSurvey(surveyResponse.surveyId, result)
-    const {status,data}=response
-    if (status!=200) {
-        alertError("Oops", "Ocurrio un error al enviar la encuesta",2)
-        return
-    }
-     await alertSuccess('Encuesta enviada', 'Sus respuestas han sido guardadas exitosamente',3);
-    router.push('/responding'); // Redirigir a la lista de encuestas
+   if (surveyData.sucursal.id!=null && surveyData.sucursal.id!=0) {
+        console.log(surveyData.sucursal.id);
+        const response = await saveSurvey(surveyResponse.surveyId, result, surveyData.sucursal.id)
+        const {status,data}=response
+        if (status!=200) {
+            alertError("Oops", "Ocurrio un error al enviar la encuesta",2)
+            return
+        }
+        await alertSuccess('Encuesta enviada', 'Sus respuestas han sido guardadas exitosamente',3);
+        router.push('/responding'); // Redirigir a la lista de encuestas
+   }else {
+    alertError("Selecciona una sucursal")
+    errors.sucursal="Selecciona sucursal"
+    return ;
+   }
+    
 };
 
 // Manejar guardado de borrador
@@ -118,6 +137,8 @@ const goBack = () => {
     router.push('/responding'); 
 };
 const validateField = (field, value) => {
+    console.log(field);
+    console.log(value);
     switch (field) {
         case 'sucursal':
             if (!value) {
@@ -137,6 +158,7 @@ const handleInput = (field, value) => {
     if (errors[field]) {
         validateField(field, value);
     }
+
 };
 </script>
 
@@ -173,26 +195,40 @@ const handleInput = (field, value) => {
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="info-details mt-3">
+                                <span class="info-label">Sucursal:</span>
+                            </div>
+                            <VueMultiselect
+                                v-model="surveyData.sucursal"
+                                :options="sucursalesList"
+                                label="nombre"
+                                track-by="id"
+                                placeholder="Selecciona una sucursal"
+                                :searchable="true"
+                                :close-on-select="true"
+                                class="modern-multiselect"
+                                select-label="Presiona enter para seleccionar"
+                                selected-label="Seleccionado"
+                                deselect-label="Presiona enter para remover"
+                                :block-keys="['Tab']"
+                                :internal-search="true"
+                                :clear-on-select="false"
+                                :hide-selected="false"
+                                :preserve-search="false"
+                                :preselect-first="false"
+                            />
+                             <span v-if="errors.sucursal" class="error-text">
+                                <span class="material-icons">error</span>
+                                {{ errors.sucursal }}
+                            </span>
                         </div>
                     </div>
                 </div>
-                <div class="sucursal-container">
-                  <ModernSelect
-                     v-model="surveyData.sucursal"
-                     label="Sucursal"
-                     icon="storefront"
-                     :options="[
-                        { nombre: 'Administrador', codigo: '1' },
-                        { nombre: 'Monitoreo', codigo: '2' },
-                     ]"
-                     option-label="nombre"
-                     option-value="codigo"
-                     placeholder="Selecciona una sucursal"
-                     @input="handleInput('sucursal', $event.target.value)"
-                     @blur="validateField('sucursal', surveyData.sucursal)"
-                     :error="errors.sucursal"
-                     />
-                </div>
+                <!-- <div class="sucursal-container">
+                    
+                 
+                </div> -->
                 <!-- Formulario de la encuesta -->
                 <div v-if="!isloading && surveyData.preguntas.length > 0" class="survey-section">
                     <SurveyForm 
@@ -482,4 +518,8 @@ const handleInput = (field, value) => {
         font-size: 16px;
     }
 }
+:deep(.multiselect__content-wrapper) {
+    position: relative !important;
+}
+
 </style>
