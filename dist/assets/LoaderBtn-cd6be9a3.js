@@ -1,0 +1,1 @@
+import{_ as s}from"./_plugin-vue_export-helper-c27b6911.js";import{c as t,d as r,e as o}from"./index-cdc5c833.js";const n={},a={class:"spinner-border text-light",role:"status",style:{width:"1.3rem",height:"1.3rem"}};function c(i,e){return t(),r("div",a,e[0]||(e[0]=[o("span",{class:"visually-hidden"},"Loading...",-1)]))}const _=s(n,[["render",c]]);export{_ as L};

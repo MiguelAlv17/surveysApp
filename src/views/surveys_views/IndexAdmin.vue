@@ -152,6 +152,9 @@ const exportToExcel = () => {
 const addnewSurvey = () => {
     router.push("/surveys/add")
 }
+const deleteSurvey = () => {
+  alertSuccess("Oops", "Trabajo en proceso", 3)
+}
 </script>
 <template>
     <!-- <Loading v-if="isloading"></Loading> -->
@@ -246,11 +249,11 @@ const addnewSurvey = () => {
                         </BtnTable> -->
                         <BtnTable 
                         class="ms-2"
-                        color="purple" 
-                        @function="redirectToEdit(item)"
-                            tooltip="Editar registro"
-                        >
-                            <span class="material-icons">edit</span>
+                        color="red" 
+                        @function="deleteSurvey(item)"
+                            tooltip="Eliminar encuesta"
+                            >
+                            <span class="material-icons">delete</span>
                         </BtnTable>
                     </template>
                 </EasyDataTable>
