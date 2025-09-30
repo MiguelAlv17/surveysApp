@@ -60,6 +60,8 @@ const getList = async() => {
         item.estado = item.estado==1?"Habilitado":"Deshabilitado"
         return item
     })
+    console.log(arrayFormated);
+    
     items.value = arrayFormated;
 
     updated_at.value = moment().format(dateFormat)
@@ -88,13 +90,13 @@ const openModal = (id) => {
     
     modalShow.value=true;
     userSelected.value=id;
-    const user = items.value.filter(i=> i.usuarioId==userSelected.value);
+    const user = items.value.filter(i=> i.id==userSelected.value);
     
     if (user == undefined) {
         alertError("oops","Ocurrio un error al mostrar el modal", 2.5)
         return;
     }
-    modalMessage.value=`Esta seguro de DESHABILITAR al usuario: "${user[0].fullname}"?`
+    modalMessage.value=`Esta seguro de DESHABILITAR al usuario: "${user[0].nombre}"?`
 }
 const delet_User = async() => {
    const user = items.value.filter(i=> i.usuarioId==userSelected.value);
@@ -255,14 +257,14 @@ const exportToExcel = async() => {
                     <template #item-actions="item" >
                          <BtnTable 
                             color="gray" 
-                            @function="redirectToEdit(item.usuarioId)"
+                            @function="redirectToEdit(item.id)"
                             tooltip="Editar usuario"
                         >
                             <span class="material-icons">edit</span>
                         </BtnTable>
                         <BtnTable 
                             color="red" 
-                            @function="openModal(item.usuarioId)"
+                            @function="openModal(item.id)"
                             tooltip="Eliminar usuario"
                         >
                             <span class="material-icons">delete</span>

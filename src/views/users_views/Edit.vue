@@ -19,14 +19,12 @@ const router = useRouter();
 
 // Form data
 const formData = reactive({
-   usuario:'', 
-   contrasena: '',
+    id:0,
    nombre: '',
-   primer_apellido: '',
-   segundo_apellido: '',
-   correo: '',
-   tipo_usuario: '',
-   estado:''
+   email: '',
+   usuario:'', 
+   tipoUsuario: '',
+   activo:'',
 });
 
 // Form state
@@ -34,10 +32,7 @@ const isSaving = ref(false);
 // Validation
 const errors = reactive({
    usuario:'', 
-   contrasena: '',
    nombre: '',
-   primer_apellido: '',
-   segundo_apellido: '',
    correo: '',
    tipo_usuario: '',
    estado:''
@@ -58,11 +53,22 @@ const getUserByid = async() => {
     const response = await getUserId(idK);
     isloading.value=false
     const {data, status} = response;
+    console.log(response);
+    
     if (status!=200) {
         alertError("Error","Ocurrio un error al cargar la informacion del usuario",2);
         return
     }
-    Object.assign(formData, data[0]);
+    
+    const {activo,email,id,nombre,tipoUsuario}=data.data;
+    formData.id = id;
+    formData.nombre = nombre;
+    formData.email= email;
+    formData.usuario= email;
+    formData.tipoUsuario= tipoUsuario.toUpperCase() == "ADMINISTRADOR"? 1 : 2;
+    formData.activo = activo ? 1:0;
+
+    // Object.assign(formData, data.data);
 }
 // Validation functions
 const validateField = (field, value) => {
@@ -113,12 +119,12 @@ const validateField = (field, value) => {
                 errors.correo = '';
                 return true;
             }
-        case 'tipo_usuario':
+        case 'tipoUsuario':
             if (!value) {
-                errors.tipo_usuario = 'Debe seleccionar un tipo de usuario';
+                errors.tipoUsuario = 'Debe seleccionar un tipo de usuario';
                 return false;
             } else {
-                errors.tipo_usuario = '';
+                errors.tipoUsuario = '';
                 return true;
             }
         
@@ -130,11 +136,10 @@ const validateField = (field, value) => {
 const validateForm = () => {
     const validations = [
         validateField('nombre', formData.nombre),
-        validateField('primer_apellido', formData.primer_apellido),
-        validateField('segundo_apellido', formData.segundo_apellido),
-        validateField('correo', formData.correo),
-        validateField('tipo_usuario', formData.tipo_usuario)
+        validateField('correo', formData.email),
+        validateField('tipo_usuario', formData.tipoUsuario)
     ];
+    console.log(validations);
     
     return validations.every(Boolean);
 };
@@ -147,7 +152,9 @@ const handleSubmit = async () => {
     
     isSaving.value = true;
     try {
-        formData.usuario = formData.correo;
+        formData.usuario = formData.email;
+        formData.tipoUsuario= formData.tipoUsuario == 1? "ADMINISTRADOR" : "FACILITADOR";
+
         const response = await updateUser(formData);
         const {data,status}=response
         if (status === 200 || status === 201) {
@@ -198,7 +205,7 @@ const handleInput = (field, value) => {
                    
                   <div class="form-row">
                      <ModernInput
-                        v-model="formData.usuarioId"
+                        v-model="formData.id"
                         type="text"
                         label="ID"
                         icon="numbers"
@@ -223,7 +230,7 @@ const handleInput = (field, value) => {
                      />
                      
                   </div>
-                  <div class="form-row">
+                  <!-- <div class="form-row">
                     <ModernInput
                         v-model="formData.primer_apellido"
                         type="text"
@@ -252,42 +259,42 @@ const handleInput = (field, value) => {
                         :disabled="isSaving"
 
                      />
-                  </div>
+                  </div> -->
                   <!-- Input de Email -->
                   <ModernInput
-                     v-model="formData.correo"
+                     v-model="formData.email"
                      type="email"
                      label="Correo Electrónico"
                      @input="handleInput('correo', $event.target.value)"
-                     @blur="validateField('correo', formData.correo)"
+                     @blur="validateField('correo', formData.email)"
                      icon="email"
                      placeholder="ejemplo@correo.com"
                      :required="true"
-                     :error="errors.correo"
+                     :error="errors.email"
                         :disabled="isSaving"
 
                   />
                   
                   <!-- Select Simple -->
                   <ModernSelect
-                     v-model="formData.tipo_usuario"
+                     v-model="formData.tipoUsuario"
                      label="tipo de usuario de usuario"
                      icon="badge"
                      :options="[
                         { nombre: 'Administrador', codigo: '1' },
-                        { nombre: 'Monitoreo', codigo: '2' },
+                        { nombre: 'Facilitador', codigo: '2' },
                      ]"
                      option-label="nombre"
                      option-value="codigo"
                      placeholder="Seleccione un tipo de usuario"
-                     @input="handleInput('tipo_usuario', $event.target.value)"
-                     @blur="validateField('tipo_usuario', formData.tipo_usuario)"
-                     :error="errors.tipo_usuario"
+                     @input="handleInput('tipoUsuario', $event.target.value)"
+                     @blur="validateField('tipoUsuario', formData.tipoUsuario)"
+                     :error="errors.tipoUsuario"
                         :disabled="isSaving"
 
                      />
                       <ModernSelect
-                     v-model="formData.estado"
+                     v-model="formData.activo"
                      label="Acceso a la aplicacion"
                      icon="lock_open"
                      :options="[

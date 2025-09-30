@@ -123,14 +123,10 @@ const navItems = [
 ];
 
 const updateSelected = (path) => {
-  console.log(path);
   const selectedRoute = navItems.find((navItem) => {
     const res = path.includes(navItem.route)
-    console.log(`${res} | ${navItem.route}`);
-    
     return res
   });
-  console.log(selectedRoute);
   selected.value = selectedRoute ? selectedRoute.selection : 'inicio';
 };
 
@@ -170,7 +166,7 @@ const handleClickOutside = (event) => {
 };
 
 onMounted(async () => {
-  roleId.value = localStorage.getItem('userRole');
+  roleId.value = userStore.userData.tipoUsuario
   updateSelected(route.path);
   document.addEventListener('click', handleClickOutside);
 });

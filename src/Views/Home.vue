@@ -5,7 +5,7 @@ import EasyDataTable from 'vue3-easy-data-table';
 import ContainerCustom from '../components/ContainerCustom.vue';
 import '../assets/styles/table.css';
 import '../assets/styles/home.css'
-import {useGetDataKioscos} from '../composables/getDataKioscos'
+// import {useGetDataKioscos} from '../composables/getDataKioscos'
 import { alertError } from '../constantes/alerts';
 import {tableHeigh} from '../constantes/api_constants'
 

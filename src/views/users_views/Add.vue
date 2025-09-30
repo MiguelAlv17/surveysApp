@@ -17,12 +17,10 @@ const router = useRouter();
 // Form data
 const formData = reactive({
    usuario:'', 
-   contrasena: '',
+   password: '',
    nombre: '',
-   primer_apellido: '',
-   segundo_apellido: '',
-   correo: '',
-   tipo_usuario: '',
+   email: '',
+   tipoUsuario: '',
 });
 
 // Form state
@@ -30,12 +28,12 @@ const isSaving = ref(false);
 // Validation
 const errors = reactive({
    usuario:'', 
-   contrasena: '',
+   password: '',
    nombre: '',
    primer_apellido: '',
    segundo_apellido: '',
-   correo: '',
-   tipo_usuario: '',
+   email: '',
+   tipoUsuario: '',
 });
 
 // Roles disponibles
@@ -85,37 +83,37 @@ const validateField = (field, value) => {
                 errors.segundo_apellido = '';
                 return true;
             }
-        case 'correo':
+        case 'email':
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!value.trim()) {
-                errors.correo = 'El correo es requerido';
+                errors.email = 'El correo es requerido';
                 return false;
             } else if (!emailRegex.test(value)) {
-                errors.correo = 'Ingrese un correo válido';
+                errors.email = 'Ingrese un correo válido';
                 return false;
             } else {
-                errors.correo = '';
+                errors.email = '';
                 return true;
             }
         
-        case 'contrasena':
+        case 'password':
             if (!value) {
-                errors.contrasena = 'La contraseña es requerida';
+                errors.password = 'La contraseña es requerida';
                 return false;
             } else if (value.length < 6) {
-                errors.contrasena = 'La contraseña debe tener al menos 6 caracteres';
+                errors.password = 'La contraseña debe tener al menos 6 caracteres';
                 return false;
             } else {
-                errors.contrasena = '';
+                errors.password = '';
                 return true;
             }
         
-        case 'tipo_usuario':
+        case 'tipoUsuario':
             if (!value) {
-                errors.tipo_usuario = 'Debe seleccionar un tipo de usuario';
+                errors.tipoUsuario = 'Debe seleccionar un tipo de usuario';
                 return false;
             } else {
-                errors.tipo_usuario = '';
+                errors.tipoUsuario = '';
                 return true;
             }
         
@@ -127,11 +125,9 @@ const validateField = (field, value) => {
 const validateForm = () => {
     const validations = [
         validateField('nombre', formData.nombre),
-        validateField('primer_apellido', formData.primer_apellido),
-        validateField('segundo_apellido', formData.segundo_apellido),
         validateField('correo', formData.correo),
         validateField('contrasena', formData.contrasena),
-        validateField('tipo_usuario', formData.tipo_usuario)
+        validateField('tipoUsuario', formData.tipoUsuario)
     ];
     
     return validations.every(Boolean);
@@ -145,7 +141,8 @@ const handleSubmit = async () => {
     
     isSaving.value = true;
     try {
-        formData.usuario = formData.correo;
+        formData.usuario = formData.email;
+        formData.tipoUsuario = formData.tipoUsuario==1?"ADMINISTRADOR":"FACILITADOR"
         const response = await addUser(formData);
         const {data,status}=response
         if (status === 200 || status === 201) {
@@ -205,7 +202,7 @@ const handleInput = (field, value) => {
                         :error="errors.nombre"
                         :disabled="isSaving"
                      />
-                     <ModernInput
+                     <!-- <ModernInput
                         v-model="formData.primer_apellido"
                         type="text"
                         label="Primer apellido"
@@ -218,9 +215,9 @@ const handleInput = (field, value) => {
                         :error="errors.primer_apellido"
                         :disabled="isSaving"
 
-                     />
+                     /> -->
                   </div>
-                  <div class="form-row">
+                  <!-- <div class="form-row">
                       <ModernInput
                         v-model="formData.segundo_apellido"
                         type="text"
@@ -235,14 +232,14 @@ const handleInput = (field, value) => {
                         :disabled="isSaving"
 
                      />
-                  </div>
+                  </div> -->
                   <!-- Input de Email -->
                   <ModernInput
-                     v-model="formData.correo"
+                     v-model="formData.email"
                      type="email"
                      label="Correo Electrónico"
-                     @input="handleInput('correo', $event.target.value)"
-                     @blur="validateField('correo', formData.correo)"
+                     @input="handleInput('email', $event.target.value)"
+                     @blur="validateField('email', formData.email)"
                      icon="email"
                      placeholder="ejemplo@correo.com"
                      :required="true"
@@ -252,22 +249,22 @@ const handleInput = (field, value) => {
                   />
                   <!-- Input de Contraseña -->
                   <ModernInput
-                     v-model="formData.contrasena"
+                     v-model="formData.password"
                      type="password"
                      label="Contraseña"
                      icon="lock"
                      placeholder="Mínimo 6 caracteres"
                      :required="true"
-                     @input="handleInput('contrasena', $event.target.value)"
-                     @blur="validateField('contrasena', formData.contrasena)"
-                     :error="errors.contrasena"
+                     @input="handleInput('password', $event.target.value)"
+                     @blur="validateField('password', formData.password)"
+                     :error="errors.password"
                         :disabled="isSaving"
 
 
                   />
                   <!-- Select Simple -->
                   <ModernSelect
-                     v-model="formData.tipo_usuario"
+                     v-model="formData.tipoUsuario"
                      label="tipo de usuario de usuario"
                      icon="badge"
                      :options="[
@@ -277,9 +274,9 @@ const handleInput = (field, value) => {
                      option-label="nombre"
                      option-value="codigo"
                      placeholder="Seleccione un tipo de usuario"
-                     @input="handleInput('tipo_usuario', $event.target.value)"
-                     @blur="validateField('tipo_usuario', formData.tipo_usuario)"
-                     :error="errors.tipo_usuario"
+                     @input="handleInput('tipoUsuario', $event.target.value)"
+                     @blur="validateField('tipoUsuario', formData.tipoUsuario)"
+                     :error="errors.tipoUsuario"
                         :disabled="isSaving"
 
                      />

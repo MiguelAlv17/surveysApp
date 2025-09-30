@@ -9,13 +9,14 @@ import ModernInput from '../../components/ModernInputs/ModernInput.vue';
 import LoaderBtn from '../../components/LoaderBtn.vue';
 import { useUserStore } from '../../stores/user';
 
-const {logout} = useUserStore();
+const {logout,userData} = useUserStore();
 
-const { addUser } = useGetDataUsuarios();
+const { updateUser } = useGetDataUsuarios();
 const router = useRouter();
 
 // Form data
 const formData = reactive({
+    id:0,
    usuario: '',
    correo: '',
    tipo_usuario: '',
@@ -46,10 +47,9 @@ onMounted(() => {
    getUserInfo()
 });
 const  getUserInfo = () => {
-   formData.correo=localStorage.getItem('email');
-    // formData.nombre=localStorage.getItem('userName');
-    const rol_number = localStorage.getItem('userRole');
-    formData.tipo_usuario = rol_number==1?"Administrador":"Monitoreo"
+    formData.id = userData.id;
+    formData.correo=userData.username
+    formData.tipoUsuario = userData.tipoUsuario
 }
 // Validation functions
 const validateField = (field, value) => {
@@ -145,14 +145,13 @@ const handleSubmit = async () => {
     }
     isSaving.value = true;
     try {
-        formData.usuario = formData.correo;
         const userInfo = {
-            usuario:formData.usuario, 
+            usuario:formData.correo, 
+            email: formData.correo,
             contrasena: formData.contrasena,
-            correo: formData.usuario,
-            usuarioId: localStorage.getItem('userid')
+            usuarioId: formData.id
         };
-        const response = await addUser(userInfo);
+        const response = await updateUser(userInfo);
         const {data,status}=response
         if (status === 200 || status === 201) {
             await alertSuccess(
@@ -259,7 +258,7 @@ const handleInput = (field, value) => {
                   />
                   <!-- Select Simple -->
                   <ModernInput
-                        v-model="formData.tipo_usuario"
+                        v-model="formData.tipoUsuario"
                         type="text"
                         label="Rol de usuario"
                         icon="person"
