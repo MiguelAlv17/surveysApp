@@ -29,7 +29,7 @@ const headers = ref([
 const items = ref([
     // {userid:1,nombre:"miguel",correo:"mi@gmail.com",level:"admin"}
 ]);
-const searchField = ["userid", "username", "correo", "level"]; //campos por los que buscara el filtro
+const searchField = ["id", "nombre", "email", "tipoUsuario"]; //campos por los que buscara el filtro
 const searchInput = ref(""); // variable para el filtro
 // loader
 const isloading = ref(false);
@@ -66,12 +66,7 @@ const getList = async() => {
 
     updated_at.value = moment().format(dateFormat)
 }
-const usertype = (tipo) => {
-    
-    if (tipo == 1) return "Administrador";
-    if (tipo == 2) return "Monitoreo";
-    return "--"
-}
+
 
 
 const redirectToEdit = async (id) => {
@@ -81,10 +76,7 @@ const redirectToEdit = async (id) => {
 const redirectToAdd = async () => {
     router.push("/users/add")
 }
-const seeuser = async (id) => {
-    let ruta = `/usuarios/ver/${id}`
-    router.push(ruta)
-}
+
 
 const openModal = (id) => {
     

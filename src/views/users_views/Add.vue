@@ -142,7 +142,7 @@ const handleSubmit = async () => {
     isSaving.value = true;
     try {
         formData.usuario = formData.email;
-        formData.tipoUsuario = formData.tipoUsuario==1?"ADMINISTRADOR":"FACILITADOR"
+        formData.tipoUsuario = solveRolUser(formData.tipoUsuario)
         const response = await addUser(formData);
         const {data,status}=response
         if (status === 200 || status === 201) {
@@ -173,7 +173,11 @@ const redirectToIndex = () => {
    cleanForm()
     router.push("/users"); // Volver atrás
 };
-
+const solveRolUser = (rol) => {
+    if (rol == 1) return "administrador"
+    if (rol == 2) return "asesor"
+    if (rol == 3) return "facilitador"
+}
 // Real-time validation
 const handleInput = (field, value) => {
     formData[field] = value;
@@ -269,7 +273,9 @@ const handleInput = (field, value) => {
                      icon="badge"
                      :options="[
                         { nombre: 'Administrador', codigo: '1' },
-                        { nombre: 'Monitoreo', codigo: '2' },
+                        { nombre: 'Asesor', codigo: '2' },
+                        { nombre: 'Facilitador', codigo: '3' },
+
                      ]"
                      option-label="nombre"
                      option-value="codigo"

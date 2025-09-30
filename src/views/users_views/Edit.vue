@@ -65,7 +65,7 @@ const getUserByid = async() => {
     formData.nombre = nombre;
     formData.email= email;
     formData.usuario= email;
-    formData.tipoUsuario= tipoUsuario.toUpperCase() == "ADMINISTRADOR"? 1 : 2;
+    formData.tipoUsuario= solveRolUser(tipoUsuario)
     formData.activo = activo ? 1:0;
 
     // Object.assign(formData, data.data);
@@ -153,7 +153,7 @@ const handleSubmit = async () => {
     isSaving.value = true;
     try {
         formData.usuario = formData.email;
-        formData.tipoUsuario= formData.tipoUsuario == 1? "ADMINISTRADOR" : "FACILITADOR";
+        formData.tipoUsuario= solveRolUser_inverted(formData.tipoUsuario);
 
         const response = await updateUser(formData);
         const {data,status}=response
@@ -193,6 +193,16 @@ const handleInput = (field, value) => {
         validateField(field, value);
     }
 };
+const solveRolUser = (rol) => {
+    if (rol.toUpperCase() == "ADMINISTRADOR") return 1
+    if (rol.toUpperCase() == "ASESOR") return 2
+    if (rol.toUpperCase() == "FACILITADOR") return 3
+}
+const solveRolUser_inverted = (rol) => {
+    if (rol == 1) return "administrador"
+    if (rol == 2) return "asesor"
+    if (rol == 3) return "facilitador"
+}
 </script>
 
 <template>
@@ -282,7 +292,8 @@ const handleInput = (field, value) => {
                      icon="badge"
                      :options="[
                         { nombre: 'Administrador', codigo: '1' },
-                        { nombre: 'Facilitador', codigo: '2' },
+                        { nombre: 'Asesor', codigo: '2' },
+                        { nombre: 'Facilitador', codigo: '3' },
                      ]"
                      option-label="nombre"
                      option-value="codigo"
