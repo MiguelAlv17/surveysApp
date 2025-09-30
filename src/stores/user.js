@@ -3,11 +3,11 @@ import {ref} from 'vue';
 import axios from 'axios';
 import {API} from '../constantes/api_constants'    
 import {useRouter} from 'vue-router'
+import moment from 'moment';
 
 export const useUserStore = defineStore('userStore',()=>{
     const userData = ref(null);
     const tokenAccess = ref(null);
-    const role_user = ref(null);
     const errorAuth = ref(false);
     const router = useRouter();
     
@@ -27,17 +27,14 @@ export const useUserStore = defineStore('userStore',()=>{
             },
            data:data
         }
-        console.log(config);
         
         try {
             const response = await axios(config);
             const { data, status } = response;
             console.log(response);
+            
             localStorage.setItem('token', data.data.token);
-            localStorage.setItem('userName', data.data.nombre);
-            localStorage.setItem('userRole', data.data.tipoUsuario);
-            // localStorage.setItem('userid', data.userid);
-
+            localStorage.setItem('userInfo', JSON.stringify(data.data));
             tokenAccess.value = data.data.token; 
             if (data.data.tipoUsuario =="administrador") {
                  router.push('/')
@@ -61,58 +58,38 @@ export const useUserStore = defineStore('userStore',()=>{
         console.log('logout');
         tokenAccess.value = null
         localStorage.removeItem('token');
-        localStorage.removeItem('email');
         localStorage.removeItem('userName');
         localStorage.removeItem('userRole');
-        localStorage.removeItem('userid');
+        localStorage.removeItem('email');
+        localStorage.removeItem('IdUser');
         router.push('/login')
     }
 
     const refreshToken = async() => {
-        let TOKEN = localStorage.getItem('token')
-        tokenAccess.value = TOKEN;
-        return 200;
-        // const config ={
-        //     method:'GET',
-        //     url: `${API}refreshToken`,
-        //     headers: { Authorization: `Bearer ${TOKEN}` },
-        // }
-        // localStorage.removeItem('token');
-        // localStorage.removeItem('role_id');
-        // localStorage.removeItem('user');
-        // try {
-        //     const {data,status} = await axios(config);
-        //     const { token_access, user } = data;
-        //     localStorage.setItem('token', token_access );
-        //     localStorage.setItem('role_id', user.role_id);
-        //     localStorage.setItem('user', JSON.stringify(user));
-        //     userData.value = user;
-        //     role_user.value = user.role_id;
+        tokenAccess.value = localStorage.getItem('token')
+        userData.value = JSON.parse(localStorage.getItem('userInfo'))
+        
+        if (moment(userData.value.expiracion).isBefore(moment(), 'day')) {
+            return 401;
 
-        //     return  status;
-        // } 
-        // catch (error) {
-        //     console.log(error);
-        //     tokenAccess.value=null;
-        //     return 400
-        // }
+        }else{
+            return 200;
+        }
     }
     
     const changePassword = (form) => {
-      console.log(form);
     }
-    // const setTime_expires =()=>{
-    //     setTimeout(() => {
-    //         refreshToken();
-    //     }, 9000);
-    // }
+    const setTime_expires =()=>{
+        setTimeout(() => {
+            refreshToken();
+        }, 9000);
+    }
     return {
         changePassword,
         loginUser,
         refreshToken,
         userData,
         tokenAccess,
-        role_user,
         logout,
         errorAuth
     }

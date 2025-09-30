@@ -292,10 +292,10 @@ onMounted( () => {
       <div class="form-actions">
         <div class="action-info">
           <span class="material-icons">info</span>
-          <span>Puedes guardar un borrador y continuar más tarde</span>
+          <span>Has clic en el boton para enviar la encuesta</span>
         </div>
         <div class="action-buttons">
-          <ModernButton 
+          <!-- <ModernButton 
             type="button"
             color="gray" 
             @click="saveDraft"
@@ -304,7 +304,7 @@ onMounted( () => {
           >
             <span class="material-icons">save</span>
             Guardar Borrador
-          </ModernButton>
+          </ModernButton> -->
           
           <ModernButton 
             type="submit"
