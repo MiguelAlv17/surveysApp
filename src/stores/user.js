@@ -36,6 +36,7 @@ export const useUserStore = defineStore('userStore',()=>{
             localStorage.setItem('token', data.data.token);
             localStorage.setItem('userInfo', JSON.stringify(data.data));
             tokenAccess.value = data.data.token; 
+            userData.value = data.data;
             if (data.data.tipoUsuario =="administrador") {
                  router.push('/')
             }
@@ -54,27 +55,62 @@ export const useUserStore = defineStore('userStore',()=>{
       
     }
     
-    const logout = () =>{
+    const logout = async() =>{
         console.log('logout');
-        tokenAccess.value = null
-        localStorage.removeItem('token');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('email');
-        localStorage.removeItem('IdUser');
+        await removeLocalStorageItems();
         router.push('/login')
     }
-
+    const removeLocalStorageItems = () => {
+        tokenAccess.value = null
+        userData.value =null
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+    }
     const refreshToken = async() => {
-        tokenAccess.value = localStorage.getItem('token')
-        userData.value = JSON.parse(localStorage.getItem('userInfo'))
-        
-        if (moment(userData.value.expiracion).isBefore(moment(), 'day')) {
+        const storedToken = localStorage.getItem('token');
+        const storedUserInfo = localStorage.getItem('userInfo');
+        // Si no hay token o info de usuario
+        if (!storedToken || !storedUserInfo) {
+            console.warn('[User Store] No token or user info found in localStorage');
             return 401;
-
-        }else{
-            return 200;
         }
+
+        let parsedUserData;
+        try {
+            parsedUserData = JSON.parse(storedUserInfo);
+        } catch (parseError) {
+            console.error('[User Store] Error parsing user info:', parseError);
+            return 401;
+        }
+        // Validar que tenga los datos necesarios
+        if (!parsedUserData || !parsedUserData.expiracion) {
+            console.warn('[User Store] Invalid user data structure');
+            return 401;
+        }
+
+        // Verificar expiración del token
+        const expirationDate = moment(parsedUserData.expiracion);
+        const now = moment();
+
+        // Validar que la fecha sea válida
+        if (!expirationDate.isValid()) {
+            console.error('[User Store] Invalid expiration date format');
+            return 401;
+        }
+        if (expirationDate.isBefore(now)) {
+            console.warn('[User Store] Token has expired');
+            return 401;
+        }
+
+        // Token válido, actualizar el store
+        tokenAccess.value = storedToken;
+        userData.value = parsedUserData;
+
+        // Opcional: Log del tiempo restante
+        const minutesRemaining = expirationDate.diff(now, 'minutes');
+        console.log(`[User Store] Token valid for ${minutesRemaining} more minutes`);
+
+        return 200;
     }
     
     const changePassword = (form) => {
@@ -91,7 +127,8 @@ export const useUserStore = defineStore('userStore',()=>{
         userData,
         tokenAccess,
         logout,
-        errorAuth
+        errorAuth,
+        removeLocalStorageItems
     }
 
 })

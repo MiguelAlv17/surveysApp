@@ -55,14 +55,14 @@ const getList = async() => {
         alertError("ocurrio un error al cargar los datos")
         return
     }
-    const arrayFormated = data.data.map(item=>{
-        item.tipo_usuario_name = usertype(item.tipo_usuario);
-        item.estado = item.estado==1?"Habilitado":"Deshabilitado"
-        return item
-    })
-    console.log(arrayFormated);
+    // const arrayFormated = data.data.map(item=>{
+    //     item.tipo_usuario_name = usertype(item.tipo_usuario);     
+    //     item.estado = item.estado==1?"Habilitado":"Deshabilitado"
+    //     return item
+    // })
+    // console.log(arrayFormated);
     
-    items.value = arrayFormated;
+    items.value = data.data;
 
     updated_at.value = moment().format(dateFormat)
 }
