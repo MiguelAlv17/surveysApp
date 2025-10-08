@@ -103,7 +103,29 @@ export const useGetDataSurveys = () => {
             return { data: error, status: 400 }
         }
     }
+
+    const getSurveyReport = async(datefrom, dateTo, questionId) => {
+        let routeApi = `reportes/pregunta/${questionId}/reporte-simple?fechaInicio=${datefrom}&fechaFin=${dateTo}`
+        try {
+            const config = {
+                method: 'get',
+                url: `${API}${routeApi}`,
+                headers: { Authorization: `Bearer ${TOKEN}` },
+            }
+            const response = await axios(config);
+            const { data, status } = response;
+            return { data, status }
+        } catch (error) {
+            console.log(error)
+            if (error.response.status == 401) {
+                router.push('/login')
+            }
+            return { data: error, status: 400 }
+        }
+    }
+
     return {
+        getSurveyReport,
         getSurveysList,
         saveSurvey,
         getSurveyByid,
