@@ -27,20 +27,21 @@ const routes = [
         path: "/surveys",
         component: () => import('./views/layout/Navbar.vue'),
         children: [
-
             // {path: '', component: () => import('./views/bitacora_views/bitacora.vue'),meta:{auth:true}},
             { path: '', component: () => import('./views/surveys_views/IndexAdmin.vue'), meta: { auth: true, role:"admin" } },
+            { path: 'add', component: () => import('./views/surveys_views/Add.vue'), meta: { auth: true, role: "admin" } },
+            { path: 'details&results/:idSurvey', component: () => import('./views/surveys_views/ResultSurvey.vue'), meta: { auth: true, role: "admin" } },
         ]
     },
-    {
-        path: "/surveys/add",
-        component: () => import('./views/layout/Navbar.vue'),
-        children: [
+    // {
+    //     path: "/surveys/add",
+    //     component: () => import('./views/layout/Navbar.vue'),
+    //     children: [
 
-            // {path: '', component: () => import('./views/bitacora_views/bitacora.vue'),meta:{auth:true}},
-            { path: '', component: () => import('./views/surveys_views/Add.vue'), meta: { auth: true, role: "admin" } },
-        ]
-    },
+    //         // {path: '', component: () => import('./views/bitacora_views/bitacora.vue'),meta:{auth:true}},
+    //         { path: '', component: () => import('./views/surveys_views/Add.vue'), meta: { auth: true, role: "admin" } },
+    //     ]
+    // },
     
     {
         path: "/responding",
@@ -94,7 +95,13 @@ const routes = [
 
     { path: '/login', component: () => import('./views/auth/Login.vue'), meta: { auth: false, role: "both" } },
     // {path: '/register', component:Register},
-
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/login',
+        meta: {
+            title: 'Página No Encontrada'
+        }
+    }
 ];
 
 const router = createRouter({
