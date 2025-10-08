@@ -27,8 +27,7 @@ const headers = ref([
     { text: "Elaborada el dia", value: "fechaFormated", sortable: true },
     { text: "Acciones", value: "actions", sortable: true },
 ]);
-const items = ref([
-]);
+const items = ref( [ ] );
 const searchField = ["id", "titulo", "descripcion", "nombreCreador"]; //campos por los que buscara el filtro
 const searchInput = ref(""); // variable para el filtro
 const filterSearch = ref('');
@@ -64,32 +63,6 @@ const getList = async() => {
         i.fechaFormated= moment(i.fechaCreacion).format('DD/MM/YYYY hh:mm a')
         return i
     });
-}
-const addnewDvr = () => {
-    router.push("/dvr/add")
-}
-const redirectToEdit = (item) => {
-    const route_to = `/surveys/edit/${item.id}`;
-     router.push(route_to)
-}
-const openingDvr = async() => {
-    isOpenning.value=true;
-    // deviceSelected.value
-    // const response = await 
-    const request = {
-        id_kiosco:deviceSelected.value.dvr_id_kiosco,
-        id_dvr:deviceSelected.value.dvr_id,
-        solicito:1
-    }
-    const response = await openDvr(request);
-    const{status}=response
-    modalShow.value=false;
-    isOpenning.value=false;
-    if (status!=200) {
-        alertError("Oops!", "Ocurrio un abrir al enviar la solicitud de apertura")
-        return
-    }
-    alertSuccess("Apertura realizada")
 }
 
 const exportToExcel = () => {
@@ -155,164 +128,619 @@ const addnewSurvey = () => {
 const deleteSurvey = () => {
   alertSuccess("Oops", "Trabajo en proceso", 3)
 }
+const filteredItems = computed(() => {
+    if (!searchInput.value || searchInput.value.trim() === '') {
+        return items.value;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    return items.value.filter(item => {
+        return searchField.some(field => {
+            const fieldValue = item[field];
+            return fieldValue && fieldValue.toString().toLowerCase().includes(searchTerm);
+        });
+    });
+});
+
+// Función para formatear tipos de usuario
+const formatUserType = (tipo) => {
+    const tipos = {
+        'facilitador': 'Facilitador',
+        'asesor': 'Asesor',
+        'administrador': 'Administrador'
+    };
+    return tipos[tipo] || tipo;
+};
+
+// Función para ver detalles (por ahora solo log)
+const viewDetails = (survey) => {
+    console.log('Ver detalles de:', survey);
+    let ruta =`/surveys/details&results/${survey.id}`
+    router.push(ruta)
+
+    // Aquí puedes agregar la navegación o modal más adelante
+};
+
 </script>
 <template>
-    <!-- <Loading v-if="isloading"></Loading> -->
-    <div >
-        <ContainerCustom 
+    <ContainerCustom 
         title="Encuestas" 
-        subtitle="Listado de usuarios con sus encuestas" 
+        subtitle="Listado de las encuestas existentes" 
         :loading="isloading"
-        icon="file_present">
-            <template v-slot:body>
-                
-                <!-- Search and Actions Section -->
-                <div class="search-and-actions">
-                    <div class="search-section">
-                        <div class="search-container">
-                            <div class="search-input-wrapper">
-                                <label class="search-label">Buscar:</label>
-                                <div class="input-group">
-                                    <div class="input-icon">
-                                        <span class="material-icons">search</span>
-                                    </div>
-                                    <input 
-                                        v-model="searchInput"
-                                        type="text"
-                                        class="search-input"
-                                        placeholder="Filtrar por coincidencia..."
-                                    />
-                                    <button 
-                                        v-if="searchInput" 
-                                        @click="searchInput = ''"
-                                        class="clear-search"
-                                        type="button"
-                                    >
-                                        <span class="material-icons">close</span>
-                                    </button>
+        icon="file_present"
+        :width="80"
+    >
+        <template v-slot:body>
+            <!-- Search and Actions Section -->
+            <div class="search-and-actions">
+                <div class="search-section">
+                    <div class="search-container">
+                        <div class="search-input-wrapper">
+                            <label class="search-label">Buscar:</label>
+                            <div class="input-group">
+                                <div class="input-icon">
+                                    <span class="material-icons">search</span>
                                 </div>
-                            </div>
-                            <div class="search-actions">
-                                <ModernButton  
-                                    color="green" 
-                                    :function="exportToExcel"
-                                    :disabled="isExporting || items.length === 0"
-                                    tooltip="Exportar a Excel"
+                                <input 
+                                    v-model="searchInput"
+                                    type="text"
+                                    class="search-input"
+                                    placeholder="Filtrar por coincidencia..."
+                                />
+                                <button 
+                                    v-if="searchInput" 
+                                    @click="searchInput = ''"
+                                    class="clear-search"
+                                    type="button"
                                 >
-                                    <LoaderBtn v-if="isExporting"/>
-                                    <span v-else class="material-icons">file_download</span>
-                                    {{ isExporting ? 'Exportando...' : 'Exportar Excel' }}
-                                </ModernButton>
-                                <ModernButton  
-                                    color="blue" 
-                                    :function="addnewSurvey"
-                                    tooltip="Agregar nuevo registro"
-                                >
-                                    <span class="material-icons">add</span>
-                                    Agregar
-                                </ModernButton>
+                                    <span class="material-icons">close</span>
+                                </button>
                             </div>
+                        </div>
+                        <div class="search-actions">
+                            <ModernButton  
+                                color="green" 
+                                :function="exportToExcel"
+                                :disabled="isExporting || items.length === 0"
+                                tooltip="Exportar a Excel"
+                            >
+                                <LoaderBtn v-if="isExporting"/>
+                                <span v-else class="material-icons">file_download</span>
+                                {{ isExporting ? 'Exportando...' : 'Exportar Excel' }}
+                            </ModernButton>
+                            <ModernButton  
+                                color="blue" 
+                                :function="addnewSurvey"
+                                tooltip="Agregar nuevo registro"
+                            >
+                                <span class="material-icons">add</span>
+                                Agregar
+                            </ModernButton>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Table Section -->
-                <div class="table-section">
-                    <EasyDataTable 
-                        :headers="headers" 
-                        :items="items"
-                        :search-field="searchField"
-                        :search-value="searchInput"
-                        header-text-direction="center"
-                        body-text-direction="center"
-                        rows-per-page-message="Registros por página"
-                        empty-message="Sin registros disponibles"
-                        rows-of-page-separator-message="de"
-                        alternating
-                        :table-height="tableHeigh"
-                        buttons-pagination
-                        table-class-name="modern-table"
-                        theme-color="#667eea"
-                        class="custom-data-table"
+            <!-- Cards Section -->
+            <div class="cards-section">
+                <!-- Empty State -->
+                <div v-if="filteredItems.length === 0" class="empty-state">
+                    <div class="empty-content">
+                        <span class="material-icons empty-icon">folder_open</span>
+                        <h3>No se encontraron encuestas</h3>
+                        <p v-if="searchInput">
+                            No hay resultados para "{{ searchInput }}"
+                        </p>
+                        <p v-else>
+                            Comienza creando tu primera encuesta
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div v-else class="cards-grid">
+                    <div 
+                        v-for="survey in filteredItems" 
+                        :key="survey.id"
+                        class="survey-card"
                     >
-                    <template #item-lastupdated="item">
-                        {{ moment(item.last_updated).format('DD/MM/YYYY hh:mm a') }}
+                        <!-- Card Header -->
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <span class="material-icons">assignment</span>
+                            </div>
+                            <div class="card-id">
+                                <span class="id-label">#ID</span> &nbsp;
+                                <span class="id-value">{{ survey.id }}</span>
+                            </div>
+                        </div>
 
-                    </template>
-                    <template #item-actions="item" >
-                         <!-- <BtnTable 
-                            color="purple" 
-                            @function="openModal(item)"
-                            tooltip="Solicitud de apertura"
-                        >
-                            <span class="material-icons">meeting_room</span>
-                        </BtnTable> -->
-                        <BtnTable 
-                        class="ms-2"
-                        color="red" 
-                        @function="deleteSurvey(item)"
-                            tooltip="Eliminar encuesta"
+                        <!-- Card Body -->
+                        <div class="card-body">
+                            <div class="info-item">
+                                <span class="material-icons info-icon">title</span>
+                                <div class="info-content">
+                                    <span class="info-label">Titulo: </span>
+                                    <h3 class="card-title">{{ survey.titulo }}</h3>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="material-icons info-icon">description</span>
+                                <div class="info-content">
+                                    <p class="card-description">{{ survey.descripcion }}</p>
+                                </div>
+                            </div>
+                            <!-- Info Grid -->
+                                <div class="info-item">
+                                    <span class="material-icons info-icon">person</span>
+                                    <div class="info-content">
+                                        <span class="info-label">Creada por</span>
+                                        <span class="info-value">{{ survey.nombreCreador }}</span>
+                                    </div>
+                                </div>
+                            <div class="info-item">
+                                <span class="material-icons info-icon">calendar_today</span>
+                                <div class="info-content">
+                                    <span class="info-label">Fecha</span>
+                                    <span class="info-value">{{ survey.fechaFormated }}</span>
+                                </div>
+                            </div>    
+                            <!-- <div class="card-info-grid">
+                                <div class="info-item">
+                                    <span class="material-icons info-icon">person</span>
+                                    <div class="info-content">
+                                        <span class="info-label">Creada por</span>
+                                        <span class="info-value">{{ survey.nombreCreador }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-item">
+                                    <span class="material-icons info-icon">calendar_today</span>
+                                    <div class="info-content">
+                                        <span class="info-label">Fecha</span>
+                                        <span class="info-value">{{ survey.fechaFormated }}</span>
+                                    </div>
+                                </div>
+                            </div> -->
+
+                            <!-- Tipos de Usuario Permitidos -->
+                            <div class="card-permissions">
+                                <span class="permissions-label">
+                                    <span class="material-icons">group</span>
+                                    Permitido para:
+                                </span>
+                                <div class="permissions-badges">
+                                    <span 
+                                        v-for="tipo in survey.tiposUsuarioPermitidos" 
+                                        :key="tipo"
+                                        class="permission-badge"
+                                        :class="`badge-${tipo}`"
+                                    >
+                                        {{ formatUserType(tipo) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="card-footer">
+                            <ModernButton 
+                                color="blue" 
+                                @click="viewDetails(survey)"
+                                tooltip="Ver detalles de la encuesta"
                             >
-                            <span class="material-icons">delete</span>
-                        </BtnTable>
-                    </template>
-                </EasyDataTable>
-
-                </div>
-
-            </template>
-            <template v-slot:footer>
-                <div class="footer-content">
-                    <div class="footer-info">
-                        <span class="material-icons">info</span>
-                        <span>{{ items.length }} registros en total</span>
-                    </div>
-                    <div class="footer-actions">
-                        <span class="last-update">Última actualización: {{ updated_at }}</span>
-                         <ModernButton 
-                            color="lile" 
-                            :function="getList"
-                            tooltip="Recargar la tabla"
-                        >
-                            <span class="material-icons">update</span>
-                        </ModernButton>
+                                <span class="material-icons">visibility</span>
+                                Ver detalles
+                            </ModernButton>
+                            <ModernButton 
+                                color="red" 
+                                @click="deleteSurvey(survey)"
+                                tooltip="Eliminar encuesta"
+                            >
+                                <span class="material-icons">delete</span>
+                            </ModernButton>
+                        </div>
                     </div>
                 </div>
-            </template>
-        </ContainerCustom>
-    </div>
-
-
-    <!--MODAL DE APERTURA DE PUERTA  -->
-    <ModalCustom 
-         v-model:show="modalShow"
-        title="Confirmacion de apertura DVR"
-        icon="meeting_room"
-        :width="40"
-        maxWidth="800px"
-        :closable="false"
-        >
-        <template #body>
-            <h6>Esta seguro de <strong>abrir</strong> la puerta del DVR?</h6>
-            <small class="text-secondary">La accion no podra deshacerse</small>
+            </div>
         </template>
-        
-        <template #footer>
-            <ModernButton color="lile" @click="modalShow = false">
-            Cancelar
-            </ModernButton>
-            <ModernButton color="green" @click="openingDvr" :disabled="isOpenning">
-            <LoaderBtn v-if="isOpenning"/>
-            <span v-else class="material-icons">login</span>
-                Apertura
-            </ModernButton>
+
+        <template v-slot:footer>
+            <div class="footer-content">
+                <div class="footer-info">
+                    <span class="material-icons">info</span>
+                    <span>{{ filteredItems.length }} de {{ items.length }} encuestas</span>
+                </div>
+                <div class="footer-actions">
+                    <span class="last-update">Última actualización: {{ updated_at }}</span>
+                    <ModernButton 
+                        color="lile" 
+                        :function="getList"
+                        tooltip="Recargar la tabla"
+                    >
+                        <span class="material-icons">update</span>
+                    </ModernButton>
+                </div>
+            </div>
         </template>
-    </ModalCustom>
-
-
+    </ContainerCustom>
 </template>
 <style scoped>
+/* ===================================
+   CARDS SECTION
+   =================================== */
 
+.cards-section {
+    margin-top: var(--spacing-2xl);
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: var(--spacing-2xl);
+    margin-top: var(--spacing-xl);
+}
+
+/* ===================================
+   SURVEY CARD
+   =================================== */
+
+.survey-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.survey-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+/* Card Header */
+.card-header {
+    background: var(--gradient-primary);
+    padding: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-white);
+}
+
+.card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-md);
+    backdrop-filter: blur(10px);
+}
+
+.card-icon .material-icons {
+    font-size: 18px;
+}
+
+.card-id {
+    display: flex;
+    /* align-items: flex-end; */
+        align-items: center;
+}
+
+.id-label {
+    font-size: var(--font-size-xs);
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.id-value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+}
+
+/* Card Body */
+.card-body {
+    padding: var(--spacing-2xl);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.card-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Info Grid */
+.card-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+}
+
+.info-icon {
+    font-size: 18px;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.info-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
+    word-break: break-word;
+}
+
+/* Permissions */
+.card-permissions {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    border-left: 3px solid var(--primary-color);
+}
+
+.permissions-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.permissions-label .material-icons {
+    font-size: 16px;
+}
+
+.permissions-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.permission-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: capitalize;
+}
+
+.badge-facilitador {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-light);
+}
+
+.badge-asesor {
+    background: rgba(33, 150, 243, 0.1);
+    color: var(--info-color);
+    border: 1px solid var(--info-light);
+}
+
+.badge-administrador {
+    background: rgba(156, 39, 176, 0.1);
+    color: #9c27b0;
+    border: 1px solid #ba68c8;
+}
+
+/* Card Footer */
+.card-footer {
+    padding: var(--spacing-lg) var(--spacing-2xl);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.card-footer :deep(.modern-btn) {
+    flex: 1;
+}
+
+/* ===================================
+   EMPTY STATE
+   =================================== */
+
+.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    border: 2px dashed var(--border-color-medium);
+}
+
+.empty-content {
+    text-align: center;
+    max-width: 400px;
+    padding: var(--spacing-3xl);
+}
+
+.empty-icon {
+    font-size: 64px;
+    color: var(--text-light);
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-content h3 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.empty-content p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+@media (max-width: 1024px) {
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-xl);
+    }
+}
+
+@media (max-width: 768px) {
+    .cards-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .card-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-header {
+        padding: var(--spacing-md);
+    }
+    
+    .card-body {
+        padding: var(--spacing-lg);
+    }
+    
+    .card-footer {
+        padding: var(--spacing-md) var(--spacing-lg);
+        flex-direction: column;
+    }
+    
+    .card-footer :deep(.modern-btn) {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .card-icon .material-icons {
+        font-size: 20px;
+    }
+    
+    .card-title {
+        font-size: var(--font-size-lg);
+    }
+}
+
+/* ===================================
+   DARK MODE
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+    .survey-card {
+        background: var(--bg-dark);
+        border-color: var(--border-color-medium);
+    }
+    
+    .survey-card:hover {
+        border-color: var(--primary-light);
+    }
+    
+    .card-title {
+        color: #e2e8f0;
+    }
+    
+    .card-description {
+        color: #a0aec0;
+    }
+    
+    .info-item {
+        background: #1a202c;
+    }
+    
+    .info-value {
+        color: #e2e8f0;
+    }
+    
+    .card-permissions {
+        background: #1a202c;
+    }
+    
+    .card-footer {
+        background: #1a202c;
+        border-top-color: var(--border-color-medium);
+    }
+    
+    .empty-state {
+        background: var(--bg-dark);
+        border-color: var(--border-color-medium);
+    }
+    
+    .empty-content h3 {
+        color: #e2e8f0;
+    }
+    
+    .empty-content p {
+        color: #a0aec0;
+    }
+}
 :deep(.modern-table) {
 
     --easy-table-header-font-size: 14px;
