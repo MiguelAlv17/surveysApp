@@ -12,6 +12,7 @@ export const useUserStore = defineStore('userStore',()=>{
     const router = useRouter();
     
     const loginUser = async (email, password) =>{
+        localStorage.clear()
         let data = JSON.stringify({
             "Email": email,
             "Password": password
@@ -42,7 +43,6 @@ export const useUserStore = defineStore('userStore',()=>{
             }
             else{
                 router.push('/responding')
-
             }
            
         } catch (error) {
@@ -61,10 +61,10 @@ export const useUserStore = defineStore('userStore',()=>{
         router.push('/login')
     }
     const removeLocalStorageItems = () => {
+
         tokenAccess.value = null
         userData.value =null
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
+        localStorage.clear()
     }
     const refreshToken = async() => {
         const storedToken = localStorage.getItem('token');
