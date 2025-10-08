@@ -27,12 +27,26 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
-  }
+  },
+  width: {
+        type: Number,
+        default: 60
+    },
+    maxWidth: {
+        type: String,
+        default: '90%'
+    },
 });
 </script>
 
 <template>
-  <div class="modern-container" :class="{ 'compact': compact ,'loading': loading}">
+  <div class="modern-container" 
+      :class="{ 'compact': compact ,'loading': loading}"
+      :style="{ 
+        width: width + '%',
+        maxWidth: maxWidth
+      }"
+  >
     <!-- Loading Overlay -->
     <div v-if="loading" class="loading-overlay">
       <div class="loading-content">
@@ -76,8 +90,8 @@ const props = defineProps({
 
 <style scoped>
 .modern-container {
-  width: 100%;
-  max-width: 1200px;
+  /* width: 80%;
+  max-width: 95%; */
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
